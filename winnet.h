@@ -10,7 +10,7 @@ class winnet
 {
 public:
     static bool downloadFile(char *url,char *filePath);
-    static char *downloadData(char *url, uint32_t &size); // Note that this will not work on pages with invalid SSL certificates.
+    static char *downloadData(char *url, uint32_t &size); // Note: This will not work on pages with invalid SSL certificates.
 };
 
 #endif // WINNET_H
