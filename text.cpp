@@ -34,20 +34,22 @@ uint64_t text::uint64Pow(uint64_t base, uint64_t exp)
 
 char *text::mkstr(uint32_t length)
 {
-    char *out=(char*)calloc(length+1,1); // Zero-terminator
+    char *out=(char*)malloc(length+1); // Zero-terminator
+    out[length]=0;
     return out;
 }
 
 wchar_t *text::mkwstr(text_t length)
 {
-    wchar_t *out=(wchar_t*)calloc(length+1,sizeof(wchar_t)); // Zero-terminator
+    wchar_t *out=(wchar_t*)malloc((length+1)*sizeof(wchar_t)); // Zero-terminator
+    out[length]=0;
     return out;
 }
 
 char *text::cloneString(char *in)
 {
     text_t len=strlen(in);
-    char *out=(char*)calloc(len+1,1);
+    char *out=(char*)mkstr(len);
     memcpy(out,in,len);
     return out;
 }
@@ -160,7 +162,7 @@ char *text::concat(char *part1, char *part2, char *part3, char *part4, char *par
 wchar_t *text::concatWideString(wchar_t *part1, wchar_t *part2)
 {
     text_t part1Len=wcslen(part1);
-    wchar_t *out=(wchar_t*)calloc(part1Len+wcslen(part2)+1,sizeof(wchar_t));
+    wchar_t *out=(wchar_t*)mkwstr(part1Len+wcslen(part2));
     wcscpy(out,part1);
     wcscpy(out+part1Len,part2);
     return out;
@@ -170,7 +172,7 @@ wchar_t *text::concatWideString(wchar_t *part1, wchar_t *part2, wchar_t *part3)
 {
     text_t part1Len=wcslen(part1);
     text_t part2Len=wcslen(part2);
-    wchar_t *out=(wchar_t*)calloc(part1Len+part2Len+wcslen(part3)+1,sizeof(wchar_t));
+    wchar_t *out=(wchar_t*)mkwstr(part1Len+part2Len+wcslen(part3));
     wcscpy(out,part1);
     wcscpy(out+part1Len,part2);
     wcscpy(out+part1Len+part2Len,part3);
@@ -182,7 +184,7 @@ wchar_t *text::concatWideString(wchar_t *part1, wchar_t *part2, wchar_t *part3, 
     text_t part1Len=wcslen(part1);
     text_t part2Len=wcslen(part2);
     text_t part3Len=wcslen(part3);
-    wchar_t *out=(wchar_t*)calloc(part1Len+part2Len+part3Len+wcslen(part4)+1,sizeof(wchar_t));
+    wchar_t *out=(wchar_t*)mkwstr(part1Len+part2Len+part3Len+wcslen(part4));
     wcscpy(out,part1);
     wcscpy(out+part1Len,part2);
     wcscpy(out+part1Len+part2Len,part3);
@@ -413,6 +415,233 @@ int64_t text::longFromString(char *in)
     return out*(n?-1:1);
 }
 
+char *text::bytesToHexString(char *in, text_t len, bool addSpaces)
+{
+    char *table="0123456789ABCDEF";
+    char *out=mkstr(len*2+(addSpaces?len-1:0));
+    text_t pos=0;
+    uint8_t thisChar;
+    for(text_t i=0;i<len;i++)
+    {
+        thisChar=(uint8_t)in[i];
+        if(addSpaces&&i>0)
+            out[pos++]=' ';
+        out[pos++]=table[(thisChar&0xF0)>>4];
+        out[pos++]=table[thisChar&0x0F];
+    }
+    return out;
+}
+
+char *text::bytesFromHexString(char *in, uint32_t &size)
+{
+    // Could contain spaces or other irrelevant chars. Use a buffer system.
+    text_t len=strlen(in);
+    size=0;
+    char *out=(char*)malloc(len); // Larger than the max value.
+    bool first=true;
+    uint8_t next=0;
+    char thisChar;
+    for(text_t i=0;i<len;i++)
+    {
+        thisChar=in[i];
+        if(thisChar=='0')
+        {
+            if(first)
+            {
+                next=0x0<<4;
+                first=false;
+                continue;
+            }
+            next|=0x0;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='1')
+        {
+            if(first)
+            {
+                next=0x1<<4;
+                first=false;
+                continue;
+            }
+            next|=0x1;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='2')
+        {
+            if(first)
+            {
+                next=0x2<<4;
+                first=false;
+                continue;
+            }
+            next|=0x2;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='3')
+        {
+            if(first)
+            {
+                next=0x3<<4;
+                first=false;
+                continue;
+            }
+            next|=0x3;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='4')
+        {
+            if(first)
+            {
+                next=0x4<<4;
+                first=false;
+                continue;
+            }
+            next|=0x4;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='5')
+        {
+            if(first)
+            {
+                next=0x5<<4;
+                first=false;
+                continue;
+            }
+            next|=0x5;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='6')
+        {
+            if(first)
+            {
+                next=0x6<<4;
+                first=false;
+                continue;
+            }
+            next|=0x6;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='7')
+        {
+            if(first)
+            {
+                next=0x7<<4;
+                first=false;
+                continue;
+            }
+            next|=0x7;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='8')
+        {
+            if(first)
+            {
+                next=0x8<<4;
+                first=false;
+                continue;
+            }
+            next|=0x8;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='9')
+        {
+            if(first)
+            {
+                next=0x9<<4;
+                first=false;
+                continue;
+            }
+            next|=0x9;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='A'||thisChar=='a')
+        {
+            if(first)
+            {
+                next=0xA<<4;
+                first=false;
+                continue;
+            }
+            next|=0xA;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='B'||thisChar=='b')
+        {
+            if(first)
+            {
+                next=0xB<<4;
+                first=false;
+                continue;
+            }
+            next|=0xB;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='C'||thisChar=='c')
+        {
+            if(first)
+            {
+                next=0xC<<4;
+                first=false;
+                continue;
+            }
+            next|=0xC;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='D'||thisChar=='d')
+        {
+            if(first)
+            {
+                next=0xD<<4;
+                first=false;
+                continue;
+            }
+            next|=0xD;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='E'||thisChar=='e')
+        {
+            if(first)
+            {
+                next=0xE<<4;
+                first=false;
+                continue;
+            }
+            next|=0xE;
+            first=true;
+            out[size++]=next;
+        }
+        else if(thisChar=='F'||thisChar=='f')
+        {
+            if(first)
+            {
+                next=0xF<<4;
+                first=false;
+                continue;
+            }
+            next|=0xF;
+            first=true;
+            out[size++]=next;
+        }
+    }
+    if(!first) // Example: "1"
+        out[size++]=in[len-1];
+    return out;
+}
+
 int32_t text::round(double in)
 {
     int32_t f=floor(in);
@@ -504,7 +733,7 @@ Next:
     if(n!=pos_notFound)
     {
         len=strlen(str);
-        char *newStr=(char*)calloc(len-whatLen+withLen+1,1);
+        char *newStr=(char*)mkstr(len-whatLen+withLen);
         strcat(newStr,substr(str,0,n));
         strcat(newStr,with);
         strcat(newStr,substr(str,n+whatLen,len-n-whatLen));
@@ -522,7 +751,7 @@ char *text::escape(char *str)
 {
     text_t length=strlen(str);
     text_t outPos=0;
-    char *out=(char*)calloc(length*2+1,1); // Max possible size
+    char *out=(char*)mkstr(length*2); // Max possible size
     char thisChar;
     for(text_t i=0;i<length;i++)
     {
@@ -547,6 +776,7 @@ char *text::escape(char *str)
         }
         out[outPos++]=thisChar;
     }
+    out[outPos]=0; // Terminate the string.
     return out;
 }
 
@@ -554,7 +784,7 @@ char *text::unescape(char *str)
 {
     text_t length=strlen(str);
     text_t outPos=0;
-    char *out=(char*)calloc(length+1,1);
+    char *out=(char*)mkstr(length); // Max possible size.
     char thisChar;
     char prevChar;
 
@@ -593,6 +823,8 @@ char *text::unescape(char *str)
         out[outPos++]=thisChar;
         TEXT_UNESCAPE_NEXT_ITERATION;
     }
+
+    out[outPos]=0; // Terminate the string.
 
     #undef TEXT_UNESCAPE_NEXT_ITERATION
 
@@ -603,7 +835,7 @@ char *text::escapeDoubleQuotationMarks(char *str)
 {
     text_t length=strlen(str);
     text_t outPos=0;
-    char *out=(char*)calloc(length*2+1,1); // Max possible size
+    char *out=(char*)mkstr(length*2); // Max possible size
     char thisChar;
     for(text_t i=0;i<length;i++)
     {
@@ -622,6 +854,7 @@ char *text::escapeDoubleQuotationMarks(char *str)
         }
         out[outPos++]=thisChar;
     }
+    out[outPos]=0; // Terminate the string.
     return out;
 }
 
@@ -629,7 +862,7 @@ char *text::unescapeDoubleQuotationMarks(char *str)
 {
     text_t length=strlen(str);
     text_t outPos=0;
-    char *out=(char*)calloc(length+1,1);
+    char *out=(char*)mkstr(length); // Max possible size.
     char thisChar;
     char prevChar;
 
@@ -661,6 +894,8 @@ char *text::unescapeDoubleQuotationMarks(char *str)
         TEXT_UNESCAPE_NEXT_ITERATION;
     }
 
+    out[outPos]=0; // Terminate the string.
+
     #undef TEXT_UNESCAPE_NEXT_ITERATION
 
     return out;
@@ -670,7 +905,7 @@ char *text::escapeSingleQuotationMarks(char *str)
 {
     text_t length=strlen(str);
     text_t outPos=0;
-    char *out=(char*)calloc(length*2+1,1); // Max possible size
+    char *out=(char*)mkstr(length*2); // Max possible size
     char thisChar;
     for(text_t i=0;i<length;i++)
     {
@@ -689,6 +924,7 @@ char *text::escapeSingleQuotationMarks(char *str)
         }
         out[outPos++]=thisChar;
     }
+    out[outPos]=0; // Terminate the string.
     return out;
 
 }
@@ -697,7 +933,7 @@ char *text::unescapeSingleQuotationMarks(char *str)
 {
     text_t length=strlen(str);
     text_t outPos=0;
-    char *out=(char*)calloc(length+1,1);
+    char *out=(char*)mkstr(length); // Max possible size.
     char thisChar;
     char prevChar;
 
@@ -728,6 +964,8 @@ char *text::unescapeSingleQuotationMarks(char *str)
         out[outPos++]=thisChar;
         TEXT_UNESCAPE_NEXT_ITERATION;
     }
+
+    out[outPos]=0; // Terminate the string.
 
     #undef TEXT_UNESCAPE_NEXT_ITERATION
 
@@ -803,14 +1041,14 @@ char *text::trim(char *in)
 
 char *text::firstChars(char *in, uint32_t chars)
 {
-    char *out=(char*)calloc(chars+1,1);
+    char *out=(char*)mkstr(chars);
     strncpy(out,in,chars);
     return out;
 }
 
 char *text::lastChars(char *in, text_t chars)
 {
-    char *out=(char*)calloc(chars+1,1);
+    char *out=(char*)mkstr(chars);
     text_t len=strlen(in);
     strcpy(out,in+len-chars);
     return out;
@@ -818,14 +1056,14 @@ char *text::lastChars(char *in, text_t chars)
 
 wchar_t *text::wFirstChars(wchar_t *in, text_t chars)
 {
-    wchar_t *out=(wchar_t*)calloc(chars+1,sizeof(wchar_t));
+    wchar_t *out=mkwstr(chars);
     wcsncpy(out,in,chars);
     return out;
 }
 
 wchar_t *text::wLastChars(wchar_t *in, uint32_t chars)
 {
-    wchar_t *out=(wchar_t*)calloc(chars+1,sizeof(wchar_t));
+    wchar_t *out=mkwstr(chars);
     text_t len=wcslen(in);
     wcscpy(out,in+len-chars);
     return out;
@@ -878,7 +1116,7 @@ bool text::iEndsWith(char *str, char *with)
 
 char *text::charToString(char in)
 {
-    char *out=(char*)calloc(2,1);
+    char *out=mkstr(1);
     out[0]=in;
     return out;
 }

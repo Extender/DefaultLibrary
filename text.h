@@ -44,6 +44,8 @@ public:
     static char *unsignedLongToString(uint64_t in);
     static int32_t intFromString(char *in);
     static int64_t longFromString(char *in);
+    static char *bytesToHexString(char *in,text_t len,bool addSpaces);
+    static char *bytesFromHexString(char *in,text_t &size);
     static int32_t round(double in);
     static double roundToPrecision(double in,int32_t precision);
     static double doubleFromString(char *in); // Only supports a.b
