@@ -7,7 +7,7 @@ uint8_t io::readUInt8(char *&data)
 
 uint16_t io::readUInt16(char *&data)
 {
-    uint16_t out=(uint16_t)*(data++);
+    uint16_t out=(uint8_t)*(data++);
     out|=(uint16_t)((uint8_t)*(data++))<<8;
     return out;
 }
