@@ -7,30 +7,30 @@ uint8_t io::readUInt8(char *&data)
 
 uint16_t io::readUInt16(char *&data)
 {
-    uint16_t out=*(data++);
-    out|=(uint16_t)(*(data++))<<8;
+    uint16_t out=(uint16_t)*(data++);
+    out|=(uint16_t)((uint8_t)*(data++))<<8;
     return out;
 }
 
 uint32_t io::readUInt32(char *&data)
 {
-    uint32_t out=*(data++);
-    out|=(uint32_t)(*(data++))<<8;
-    out|=(uint32_t)(*(data++))<<16;
-    out|=(uint32_t)(*(data++))<<24;
+    uint32_t out=(uint8_t)*(data++);
+    out|=(uint32_t)((uint8_t)*(data++))<<8;
+    out|=(uint32_t)((uint8_t)*(data++))<<16;
+    out|=(uint32_t)((uint8_t)*(data++))<<24;
     return out;
 }
 
 uint64_t io::readUInt64(char *&data)
 {
-    uint64_t out=*(data++);
-    out|=(uint64_t)(*(data++))<<8;
-    out|=(uint64_t)(*(data++))<<16;
-    out|=(uint64_t)(*(data++))<<24;
-    out|=(uint64_t)(*(data++))<<32;
-    out|=(uint64_t)(*(data++))<<40;
-    out|=(uint64_t)(*(data++))<<48;
-    out|=(uint64_t)(*(data++))<<56;
+    uint64_t out=(uint8_t)*(data++);
+    out|=(uint64_t)((uint8_t)*(data++))<<8;
+    out|=(uint64_t)((uint8_t)*(data++))<<16;
+    out|=(uint64_t)((uint8_t)*(data++))<<24;
+    out|=(uint64_t)((uint8_t)*(data++))<<32;
+    out|=(uint64_t)((uint8_t)*(data++))<<40;
+    out|=(uint64_t)((uint8_t)*(data++))<<48;
+    out|=(uint64_t)((uint8_t)*(data++))<<56;
     return out;
 }
 
@@ -92,7 +92,7 @@ uint64_t io::peekUInt64(char *data, fs_t pos)
     return out;
 }
 
-uint32_t io::peekFsT(char *data, fs_t pos)
+fs_t io::peekFsT(char *data, fs_t pos)
 {
     return peekUInt32(data,pos);
 }
@@ -116,19 +116,19 @@ char *io::peekZeroTerminatedData(char *data, fs_t pos)
     return out;
 }
 
-uint8_t io::posBasedReadUInt8(char *data, uint32_t &pos)
+uint8_t io::posBasedReadUInt8(char *data, fs_t &pos)
 {
     return (uint8_t)data[pos++];
 }
 
-uint16_t io::posBasedReadUInt16(char *data, uint32_t &pos)
+uint16_t io::posBasedReadUInt16(char *data, fs_t &pos)
 {
     uint16_t out=data[pos++];
     out|=(uint16_t)data[pos++]<<8;
     return out;
 }
 
-uint32_t io::posBasedReadUInt32(char *data, uint32_t &pos)
+uint32_t io::posBasedReadUInt32(char *data, fs_t &pos)
 {
     uint32_t out=data[pos++];
     out|=(uint32_t)data[pos++]<<8;
@@ -137,7 +137,7 @@ uint32_t io::posBasedReadUInt32(char *data, uint32_t &pos)
     return out;
 }
 
-uint64_t io::posBasedReadUInt64(char *data, uint32_t &pos)
+uint64_t io::posBasedReadUInt64(char *data, fs_t &pos)
 {
     uint64_t out=data[pos++];
     out|=(uint64_t)data[pos++]<<8;
