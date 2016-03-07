@@ -1,13 +1,16 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include <vector>
+#include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
+#include <memory.h>
+#include <vector>
 #include <sstream>
 
 #define text_t uint32_t
-#define pos_notFound INT32_MAX
+#define pos_notFound INT_MAX
 #define DEFAULT_DOUBLE_TO_STRING_PRECISION 6
 
 class text
@@ -19,68 +22,70 @@ public:
     static uint64_t uint64Pow(uint64_t base,uint64_t exp);
     static char *mkstr(text_t length);
     static wchar_t *mkwstr(text_t length);
-    static char *cloneString(char *in);
-    static char *concat(char *part1,char *part2);
-    static char *concat(char *part1,char *part2,char *part3);
-    static char *concat(char *part1,char *part2,char *part3,char *part4);
-    static char *concat(char *part1,char *part2,char *part3,char *part4,char *part5);
-    static char *concat(char *part1,char *part2,char *part3,char *part4,char *part5,char *part6);
-    static char *concat(char *part1,char *part2,char *part3,char *part4,char *part5,char *part6,char *part7);
-    static char *concat(char *part1,char *part2,char *part3,char *part4,char *part5,char *part6,char *part7,char *part8);
-    static wchar_t *concatWideString(wchar_t *part1,wchar_t *part2);
-    static wchar_t *concatWideString(wchar_t *part1,wchar_t *part2,wchar_t *part3);
-    static wchar_t *concatWideString(wchar_t *part1,wchar_t *part2,wchar_t *part3,wchar_t *part4);
-    static char *concatPaths(char *part1,char *part2);
-    static char *concatPaths(char *part1,char *part2,char *part3);
-    static char *concatPaths(char *part1,char *part2,char *part3,char *part4);
-    static char *concatPaths(char *part1,char *part2,char *part3,char *part4,char *part5);
-    static char *concatPaths(char *part1,char *part2,char *part3,char *part4,char *part5,char *part6);
-    static char *concatPaths(char *part1,char *part2,char *part3,char *part4,char *part5,char *part6,char *part7);
-    static char *concatPaths(char *part1,char *part2,char *part3,char *part4,char *part5,char *part6,char *part7,char *part8);
+    static char *cloneString(const char *in);
+    static char *terminateFixedLengthString(const char *in,text_t length);
+    static char *concat(const char *part1,const char *part2);
+    static char *concat(const char *part1,const char *part2,const char *part3);
+    static char *concat(const char *part1,const char *part2,const char *part3,const char *part4);
+    static char *concat(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5);
+    static char *concat(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5,const char *part6);
+    static char *concat(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5,const char *part6,const char *part7);
+    static char *concat(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5,const char *part6,const char *part7,const char *part8);
+    static wchar_t *concatWideString(const wchar_t *part1,const wchar_t *part2);
+    static wchar_t *concatWideString(const wchar_t *part1,const wchar_t *part2,const wchar_t *part3);
+    static wchar_t *concatWideString(const wchar_t *part1,const wchar_t *part2,const wchar_t *part3,const wchar_t *part4);
+    static char *concatPaths(const char *part1,const char *part2);
+    static char *concatPaths(const char *part1,const char *part2,const char *part3);
+    static char *concatPaths(const char *part1,const char *part2,const char *part3,const char *part4);
+    static char *concatPaths(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5);
+    static char *concatPaths(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5,const char *part6);
+    static char *concatPaths(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5,const char *part6,const char *part7);
+    static char *concatPaths(const char *part1,const char *part2,const char *part3,const char *part4,const char *part5,const char *part6,const char *part7,const char *part8);
     static char *toString(int32_t in);
     static char *longToString(int64_t in);
     static char *doubleToString(double in); // Warning: precision loss (inavoidable)
+    static char *doubleToStringWithFixedPrecision(double in,uint8_t precision); // Warning: precision loss (inavoidable)
     static char *unsignedIntToString(uint32_t in);
     static char *unsignedLongToString(uint64_t in);
-    static int32_t intFromString(char *in);
-    static int64_t longFromString(char *in);
-    static char *bytesToHexString(char *in,text_t len,bool addSpaces);
-    static char *bytesFromHexString(char *in,text_t &size);
+    static int32_t intFromString(const char *in);
+    static int64_t longFromString(const char *in);
+    static char *bytesToHexString(const char *in,text_t len,bool addSpaces);
+    static char *bytesFromHexString(const char *in,text_t &size);
     static int32_t round(double in);
     static double roundToPrecision(double in,int32_t precision);
-    static double doubleFromString(char *in); // Only supports a.b
-    static text_t indexOf(char *haystack,char *needle);
-    static text_t indexOfFrom(char *haystack,char *needle,text_t startFrom);
-    static text_t lastIndexOf(char *haystack,char *needle);
-    static text_t lastIndexOfTo(char *haystack,char *needle,text_t to); // "to" may not be bigger than strlen(haystack).
-    static char *substr(char *str,text_t start);
-    static char *substr(char *str,text_t start,text_t length);
-    static char *replace(char *str,char *what,char *with);
-    static char *escape(char *str); // Escapes all instances of \ " '
-    static char *unescape(char *str); // Unescapes all instances of \ " '
-    static char *escapeDoubleQuotationMarks(char *str); // Escapes all instances of \ "
-    static char *unescapeDoubleQuotationMarks(char *str); // Unescapes all instances of \ "
-    static char *escapeSingleQuotationMarks(char *str); // Escapes all instances of \ '
-    static char *unescapeSingleQuotationMarks(char *str); // Unescapes all instances of \ '
-    static std::vector<char*> split(char *in,char *separator);
-    static text_t count(char *haystack,char *needle);
-    static char *trimStart(char *in);
-    static char *trimEnd(char *in);
-    static char *trim(char *in);
-    static char *firstChars(char *in,text_t chars);
-    static char *lastChars(char *in,text_t chars);
-    static wchar_t *wFirstChars(wchar_t *in,text_t chars);
-    static wchar_t *wLastChars(wchar_t *in,text_t chars);
+    static double doubleFromString(const char *in); // Only supports a.b
+    static text_t indexOf(const char *haystack,const char *needle);
+    static text_t indexOfFrom(const char *haystack,const char *needle,text_t startFrom);
+    static text_t lastIndexOf(const char *haystack,const char *needle);
+    static text_t lastIndexOfTo(const char *haystack,const char *needle,text_t to); // "to" may not be bigger than strlen(haystack).
+    static char *substr(const char *str,text_t start);
+    static char *substr(const char *str,text_t start,text_t length);
+    static char *replace(const char *str,const char *what,const char *with);
+    static char *escape(const char *str); // Escapes all instances of \ " '
+    static char *unescape(const char *str); // Unescapes all instances of \ " '
+    static char *escapeDoubleQuotationMarks(const char *str); // Escapes all instances of \ "
+    static char *unescapeDoubleQuotationMarks(const char *str); // Unescapes all instances of \ "
+    static char *escapeSingleQuotationMarks(const char *str); // Escapes all instances of \ '
+    static char *unescapeSingleQuotationMarks(const char *str); // Unescapes all instances of \ '
+    static std::vector<char*> split(const char *in,const char *separator);
+    static text_t count(const char *haystack,const char *needle);
+    static char *trimStart(const char *str);
+    static char *trimEnd(const char *str);
+    static char *trim(const char *str);
+    static char *firstChars(const char *in,text_t chars);
+    static char *lastChars(const char *in,text_t chars);
+    static wchar_t *wFirstChars(const wchar_t *in,text_t chars);
+    static wchar_t *wLastChars(const wchar_t *in,text_t chars);
     static bool isWhitespace(char chr);
-    static bool startsWith(char *str,char *with);
-    static bool endsWith(char *str,char *with);
-    static bool iStartsWith(char *str,char *with);
-    static bool iEndsWith(char *str,char *with);
+    static bool startsWith(const char *str,const char *with);
+    static bool endsWith(const char *str,const char *with);
+    static bool iStartsWith(const char *str,const char *with);
+    static bool iEndsWith(const char *str,const char *with);
     static char *charToString(char in);
-    static char *getDirPath(char *path);
-    static char *getFileName(char *filePath);
-    static char *getFileExtension(char *filePath);
-    static char *getFileNameWithoutExtension(char *filePath);
+    static char *getDirPath(const char *path);
+    static char *getFileName(const char *filePath);
+    static char *getFileExtension(const char *filePath);
+    static char *getFileNameWithoutExtension(const char *filePath);
 };
 
 #endif // TEXT_H
