@@ -234,14 +234,14 @@ void io::writeDouble(char *data, double i, uint32_t &pos)
     writeUInt64(data,fl,pos);
 }
 
-void io::writeFixedLengthData(char *data, fs_t length, char *in, fs_t &pos)
+void io::writeFixedLengthData(char *data, fs_t length, const char *in, fs_t &pos)
 {
     writeFsT(data,length,pos);
     for(fs_t i=0;i<length;i++)
         data[pos++]=(uint8_t)in[i];
 }
 
-void io::writeZeroTerminatedData(char *data, char *in, fs_t &pos)
+void io::writeZeroTerminatedData(char *data, const char *in, fs_t &pos)
 {
     fs_t length=strlen(in);
     for(fs_t i=0;i<length;i++)
@@ -249,7 +249,7 @@ void io::writeZeroTerminatedData(char *data, char *in, fs_t &pos)
     data[pos++]=0;
 }
 
-void io::writeRawData(char *data, char *in, fs_t length, fs_t &pos)
+void io::writeRawData(char *data, const char *in, fs_t length, fs_t &pos)
 {
     for(fs_t i=0;i<length;i++)
         data[pos++]=(uint8_t)in[i];
@@ -302,7 +302,7 @@ void io::putDouble(char *data, double i, fs_t pos)
     putUInt64(data,fl,pos);
 }
 
-void io::putFixedLengthData(char *data, fs_t length, char *in, fs_t pos)
+void io::putFixedLengthData(char *data, fs_t length, const char *in, fs_t pos)
 {
     putFsT(data,length,pos);
     pos+=sizeof(fs_t);
@@ -310,7 +310,7 @@ void io::putFixedLengthData(char *data, fs_t length, char *in, fs_t pos)
         data[pos++]=(uint8_t)in[i];
 }
 
-void io::putZeroTerminatedData(char *data, char *in, fs_t pos)
+void io::putZeroTerminatedData(char *data, const char *in, fs_t pos)
 {
     fs_t length=strlen(in);
     for(fs_t i=0;i<length;i++)
@@ -318,7 +318,7 @@ void io::putZeroTerminatedData(char *data, char *in, fs_t pos)
     data[pos++]=0;
 }
 
-void io::putRawData(char *data, char *in, fs_t length, fs_t pos)
+void io::putRawData(char *data, const char *in, fs_t length, fs_t pos)
 {
     for(fs_t i=0;i<length;i++)
         data[pos++]=(uint8_t)in[i];
@@ -366,28 +366,28 @@ void io::writeDoubleToBuffer(char *&data, double i, uint32_t &pos, uint32_t &buf
     writeUInt64ToBuffer(data,fl,pos,bufferSize);
 }
 
-void io::writeFixedLengthDataToBuffer(char *&data, fs_t length, char *in, fs_t &pos, fs_t &bufferSize)
+void io::writeFixedLengthDataToBuffer(char *&data, fs_t length, const char *in, fs_t &pos, fs_t &bufferSize)
 {
     fs_t newPos=pos+length+sizeof(fs_t);
     bufferCheck(data,newPos,bufferSize);
     writeFixedLengthData(data,length,in,pos);
 }
 
-void io::writeZeroTerminatedDataToBuffer(char *&data, char *in, fs_t &pos, fs_t &bufferSize)
+void io::writeZeroTerminatedDataToBuffer(char *&data, const char *in, fs_t &pos, fs_t &bufferSize)
 {
     fs_t newPos=pos+strlen(in)+1;
     bufferCheck(data,newPos,bufferSize);
     writeZeroTerminatedData(data,in,pos);
 }
 
-void io::writeRawDataToBuffer(char *&data, char *in, fs_t length, fs_t &pos, fs_t &bufferSize)
+void io::writeRawDataToBuffer(char *&data, const char *in, fs_t length, fs_t &pos, fs_t &bufferSize)
 {
     fs_t newPos=pos+length;
     bufferCheck(data,newPos,bufferSize);
     writeRawData(data,in,length,pos);
 }
 
-void io::writeRawDataToLongBuffer(char *&data, char *in, uint64_t length, uint64_t &pos, uint64_t &bufferSize)
+void io::writeRawDataToLongBuffer(char *&data, const char *in, uint64_t length, uint64_t &pos, uint64_t &bufferSize)
 {
     fs_t newPos=pos+length;
     longBufferCheck(data,newPos,bufferSize);
@@ -409,6 +409,22 @@ void io::writeRawCharToLongBuffer(char *&data, unsigned char in, uint64_t &pos, 
 {
     longBufferCheck(data,pos+1,bufferSize);
     data[pos++]=in;
+}
+
+void io::reverseByteOrder(char *data, fs_t length)
+{
+    // If length is uneven, the byte at the center doesn't need to be replaced.
+    if(length<2)
+        return;
+    uint32_t lastIndex=length-1;
+    uint32_t mirroredIndex=length-1;
+    for(fs_t i=0;i<(fs_t)(length/2);i++)
+    {
+        mirroredIndex=lastIndex-i;
+        uint8_t newByte=data[mirroredIndex];
+        data[mirroredIndex]=data[i];
+        data[i]=newByte;
+    }
 }
 
 void io::terminateBuffer(char *&buffer, fs_t &pos, fs_t bufferSize)

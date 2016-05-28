@@ -48,10 +48,7 @@ std::vector<std::pair<config_key_t, config_value_t> *> *config::getValues(char *
         char *valueData=zeroTerminated?io::posBasedReadZeroTerminatedData(source,pos):io::posBasedReadFixedLengthData(source,pos,valueLength);
         if(!allValues&&!text::startsWith(key,startingWith)) // Needed here, we need to skip the value declaration before moving on to the next key-value-pair.
             continue;
-        config_value_t valueProvider=new config_value_deref_t();
-        valueProvider->valueLength=zeroTerminated?strlen(valueData):valueLength;
-        valueProvider->value=valueData;
-        valueProvider->zeroTerminated=zeroTerminated;
+        config_value_t valueProvider=new config_value_deref_t(zeroTerminated?strlen(valueData):valueLength,valueData,zeroTerminated);
         std::pair<config_key_t, config_value_t> *pair=new std::pair<config_key_t, config_value_t>(key,valueProvider);
         out->push_back(pair);
     }
@@ -70,10 +67,7 @@ config_value_t config::getValue(char *source, config_key_t key)
         char *valueData=zeroTerminated?io::posBasedReadZeroTerminatedData(source,pos):io::posBasedReadFixedLengthData(source,pos,valueLength);
         if(stricmp(thisKey,key)!=0) // Needed here, we need to skip the value declaration before moving on to the next key-value-pair.
             continue;
-        config_value_t valueProvider=new config_value_deref_t();
-        valueProvider->valueLength=zeroTerminated?strlen(valueData):valueLength;
-        valueProvider->value=valueData;
-        valueProvider->zeroTerminated=zeroTerminated;
+        config_value_t valueProvider=new config_value_deref_t(zeroTerminated?strlen(valueData):valueLength,valueData,zeroTerminated);
         return valueProvider;
     }
     return nullValue;
@@ -170,4 +164,29 @@ char *config::serializeConfig(std::vector<std::pair<config_key_t, config_value_t
     fs_t zeroPos=0;
     io::writeFsT(buffer,valueCount,zeroPos);
     return buffer;
+}
+
+void config::freeValueArray(std::vector<std::pair<config_key_t, config_value_t> *> *values)
+{
+    fs_t size=values->size();
+    for(fs_t i=0;i<size;i++)
+    {
+        std::pair<config_key_t, config_value_t> *pair=values->at(i);
+        free(pair->first);
+        delete pair->second;
+        free(pair);
+    }
+    free(values);
+}
+
+ConfigValue::ConfigValue(uint32_t _valueLength, char *_value, bool _zeroTerminated)
+{
+    valueLength=_valueLength;
+    value=_value;
+    zeroTerminated=_zeroTerminated;
+}
+
+ConfigValue::~ConfigValue()
+{
+    free(value);
 }

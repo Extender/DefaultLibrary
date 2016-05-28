@@ -1,6 +1,8 @@
 #ifndef INI_H
 #define INI_H
 
+#include <stdlib.h>
+
 #include "text.h"
 #include "io.h"
 

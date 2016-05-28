@@ -47,9 +47,9 @@ public:
     static void writeUInt64(char *data, uint64_t i, fs_t &pos);
     static void writeFsT(char *data, fs_t i, fs_t &pos);
     static void writeDouble(char *data, double i, fs_t &pos);
-    static void writeFixedLengthData(char *data, fs_t length, char *in, fs_t &pos);
-    static void writeZeroTerminatedData(char *data, char *in, fs_t &pos);
-    static void writeRawData(char *data, char *in, fs_t length, fs_t &pos);
+    static void writeFixedLengthData(char *data, fs_t length, const char *in, fs_t &pos);
+    static void writeZeroTerminatedData(char *data, const char *in, fs_t &pos);
+    static void writeRawData(char *data, const char *in, fs_t length, fs_t &pos);
 
     static void putUInt8(char *data, uint8_t i, fs_t pos);
     static void putUInt16(char *data, uint16_t i, fs_t pos);
@@ -57,9 +57,9 @@ public:
     static void putUInt64(char *data, uint64_t i, fs_t pos);
     static void putFsT(char *data, fs_t i, fs_t pos);
     static void putDouble(char *data, double i, fs_t pos);
-    static void putFixedLengthData(char *data, fs_t length, char *in, fs_t pos);
-    static void putZeroTerminatedData(char *data, char *in, fs_t pos);
-    static void putRawData(char *data, char *in, fs_t length, fs_t pos);
+    static void putFixedLengthData(char *data, fs_t length, const char *in, fs_t pos);
+    static void putZeroTerminatedData(char *data, const char *in, fs_t pos);
+    static void putRawData(char *data, const char *in, fs_t length, fs_t pos);
 
     static void writeUInt8ToBuffer(char *&data, uint8_t i, fs_t &pos, fs_t &bufferSize);
     static void writeUInt16ToBuffer(char *&data, uint16_t i, fs_t &pos, fs_t &bufferSize);
@@ -67,12 +67,13 @@ public:
     static void writeUInt64ToBuffer(char *&data, uint64_t i, fs_t &pos, fs_t &bufferSize);
     static void writeFsTToBuffer(char *&data, fs_t i, fs_t &pos, fs_t &bufferSize);
     static void writeDoubleToBuffer(char *&data, double i, fs_t &pos, fs_t &bufferSize);
-    static void writeFixedLengthDataToBuffer(char *&data, fs_t length, char *in, fs_t &pos, fs_t &bufferSize);
-    static void writeZeroTerminatedDataToBuffer(char *&data, char *in, fs_t &pos, fs_t &bufferSize);
-    static void writeRawDataToBuffer(char *&data, char *in, fs_t length, fs_t &pos, fs_t &bufferSize);
-    static void writeRawDataToLongBuffer(char *&data, char *in, uint64_t length, uint64_t &pos, uint64_t &bufferSize);
+    static void writeFixedLengthDataToBuffer(char *&data, fs_t length, const char *in, fs_t &pos, fs_t &bufferSize);
+    static void writeZeroTerminatedDataToBuffer(char *&data, const char *in, fs_t &pos, fs_t &bufferSize);
+    static void writeRawDataToBuffer(char *&data, const char *in, fs_t length, fs_t &pos, fs_t &bufferSize);
+    static void writeRawDataToLongBuffer(char *&data, const char *in, uint64_t length, uint64_t &pos, uint64_t &bufferSize);
     static void writeRawCharToBuffer(char *&data, unsigned char in, fs_t &pos, fs_t &bufferSize);
     static void writeRawCharToLongBuffer(char *&data, unsigned char in, uint64_t &pos, uint64_t &bufferSize);
+    static void reverseByteOrder(char *data, fs_t length);
 
     static void terminateBuffer(char *&buffer, fs_t &pos, fs_t bufferSize);
     static bool bufferCheck(char *&buffer,fs_t pos,fs_t &bufferSize);

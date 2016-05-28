@@ -1,6 +1,7 @@
 #ifndef HTML_H
 #define HTML_H
 
+#include <stdlib.h>
 #include <stdint.h>
 #include <vector>
 #include "text.h"
@@ -51,6 +52,7 @@ namespace html
         node_id_t *children;
 
         Node();
+        ~Node();
         Node(node_id_t _id);
         Node(node_id_t _id,node_type_t _type);
         Node(node_id_t _id,char *_name);

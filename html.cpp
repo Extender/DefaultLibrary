@@ -126,6 +126,7 @@ void html::NodeCollection::removeChild(html::Node *node, node_id_t childId)
     node_id_t *newChildBuffer=(node_id_t*)malloc(node->childBufferSize*sizeof(node_id_t));
     memcpy(newChildBuffer,node->children,index*sizeof(node_id_t)); // Entries before this entry
     memcpy(newChildBuffer+index,node->children+index+1,(node->childCount-index-1)*sizeof(node_id_t)); // Entries after this entry
+    free(node->children);
     node->children=newChildBuffer;
     node->childCount--;
 }
@@ -142,6 +143,8 @@ void html::NodeCollection::insertChild(html::Node *node, node_id_t childId, node
     newChildBuffer[pos]=childId;
     if(pos!=node->childCount)
         memcpy(newChildBuffer+pos+1,node->children+pos,pos);
+    free(node->children);
+    node->children=newChildBuffer;
     node->childCount++;
 }
 
@@ -162,6 +165,7 @@ void html::NodeCollection::addNode(html::Node **&nodes, node_id_t &nodeCount, no
 
 void html::NodeCollection::removeNode(html::Node **&nodes, node_id_t &nodeCount, node_id_t &bufferSize, html::Node *node)
 {
+    // Does not delete the node.
     node_id_t index=indexOf(nodes,nodeCount,node);
     if(index==nodeCount-1)
     {
@@ -171,6 +175,7 @@ void html::NodeCollection::removeNode(html::Node **&nodes, node_id_t &nodeCount,
     Node **newBuffer=(Node**)malloc(bufferSize*sizeof(Node*));
     memcpy(newBuffer,nodes,index*sizeof(Node*)); // Entries before this entry
     memcpy(newBuffer+index,nodes+index+1,(nodeCount-index-1)*sizeof(Node*)); // Entries after this entry
+    free(nodes);
     nodes=newBuffer;
     nodeCount--;
 }
@@ -191,27 +196,34 @@ void html::Node::initNode(node_id_t _id,node_type_t _type,char *_name,fs_t _valu
 
 html::Node::Node()
 {
-    initNode(node_invalidId,NODE_TYPE_DEFAULT,DEFAULT_NODE_NAME,0,0);
+    initNode(node_invalidId,NODE_TYPE_DEFAULT,DEFAULT_NODE_NAME,0,strdup(""));
+}
+
+html::Node::~Node()
+{
+    free(name);
+    free(value);
+    free(children);
 }
 
 html::Node::Node(node_id_t _id)
 {
-    initNode(_id,NODE_TYPE_DEFAULT,DEFAULT_NODE_NAME,0,"");
+    initNode(_id,NODE_TYPE_DEFAULT,DEFAULT_NODE_NAME,0,strdup(""));
 }
 
 html::Node::Node(node_id_t _id, node_type_t _type)
 {
-    initNode(_id,_type,DEFAULT_NODE_NAME,0,"");
+    initNode(_id,_type,DEFAULT_NODE_NAME,0,strdup(""));
 }
 
 html::Node::Node(node_id_t _id, char *_name)
 {
-    initNode(_id,NODE_TYPE_DEFAULT,_name,0,"");
+    initNode(_id,NODE_TYPE_DEFAULT,_name,0,strdup(""));
 }
 
 html::Node::Node(node_id_t _id, node_type_t _type, char *_name)
 {
-    initNode(_id,_type,_name,0,"");
+    initNode(_id,_type,_name,0,strdup(""));
 }
 
 html::Node::Node(node_id_t _id, char *_name, fs_t _valueLength, char *_value)
@@ -254,7 +266,7 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
     bool attrNameHadWhitespace=false;
     bool tagHadAttrWithStringValue=false; // We need a string value, it could be a mathematical equation or something similar.
     bool isDoctypeDeclaration=false;
-    char *plaintextEnd;
+    char *plaintextEnd=0;
     text_t lastOpeningTagPosition=pos_notFound;
     text_t lastOpeningTagPositionInPlaintext=pos_notFound;
     text_t plaintextEndLen;
@@ -326,9 +338,11 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
     NodeCollection::addNode(nodes,nodeCount,bufferSize,n);\
     attrNameBufferSize=DEFAULT_NODE_PARSER_ATTR_NAME_BUFFER_SIZE;\
     attrNameLength=0;\
+    free(attrName);\
     attrName=(char*)malloc(attrNameBufferSize);\
     attrValueBufferSize=DEFAULT_NODE_PARSER_ATTR_VALUE_BUFFER_SIZE;\
     attrValueLength=0;\
+    free(attrValue);\
     attrValue=(char*)malloc(attrValueBufferSize);
 
     #define HTML_PARSER_CLEAR_BUFFERS \
@@ -339,6 +353,7 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
     tagHadAttrWithStringValue=false;\
     tagNameBufferSize=DEFAULT_NODE_PARSER_TAG_NAME_BUFFER_SIZE;\
     tagNameLength=0;\
+    free(tagName);\
     tagName=(char*)malloc(tagNameBufferSize);
 
     #define HTML_PARSER_FINALIZE_TAG \
@@ -403,10 +418,12 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                         isPlaintext=true;\
                         "Do not set this to NODE_TYPE_PLAINTEXT.";\
                         thisNode->type|=NODE_TYPE_PLAINTEXT;\
+                        free(plaintextEnd);\
                         plaintextEnd=text::concat("</",tagName,">");\
                         plaintextEndLen=strlen(plaintextEnd);\
                         "Allocate value buffer:";\
                         thisNode->valueBufferSize=DEFAULT_NODE_PARSER_TEXT_CONTENT_BUFFER_SIZE;\
+                        free(thisNode->value);\
                         thisNode->value=(char*)malloc(thisNode->valueBufferSize);\
                         "Do not remove this node from openNodes right after the opening tag ends, there will be attribute nodes!";\
                     }\
@@ -428,11 +445,15 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
         "WARNING: TEST THIS!";\
         text_t valueLength=i-lastOpeningTagPosition;\
         char *value=text::substr(source,lastOpeningTagPosition,valueLength);\
-        Node *textNode=new Node(newId,NODE_TYPE_TEXT,"",valueLength,value);\
+        Node *textNode=new Node(newId,NODE_TYPE_TEXT,strdup(""),valueLength,value);\
         textNode->parent=thisNode->parent;\
         "Delete this node's child nodes";\
         for(node_id_t j=0;j<thisNode->childCount;j++)\
-            NodeCollection::removeNode(nodes,nodeCount,bufferSize,NodeCollection::getNodeById(nodes,nodeCount,thisNode->children[j]));\
+        {\
+            Node *nodeToRemove=NodeCollection::getNodeById(nodes,nodeCount,thisNode->children[j]);\
+            NodeCollection::removeNode(nodes,nodeCount,bufferSize,nodeToRemove);\
+            delete nodeToRemove;\
+        }\
         NodeCollection::addChild(parentNode,newId);\
         NodeCollection::addNode(nodes,nodeCount,bufferSize,textNode);\
         NodeCollection::removeNode(openNodes,openNodeCollectionLength,openNodeBufferSize,thisNode);\
@@ -474,7 +495,7 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                     {
                         // This is a boolean attribute at the end of the tag.
                         io::terminateBuffer(attrName,attrNameLength,attrNameBufferSize);
-                        attrValue="";
+                        attrValue=strdup("");
                         attrValueLength=0;
                         HTML_PARSER_ADD_ATTRIBUTE;
                     }
@@ -564,9 +585,11 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                         isDoctypeDeclaration=false;
                         attrNameBufferSize=DEFAULT_NODE_PARSER_ATTR_NAME_BUFFER_SIZE;
                         attrNameLength=0;
+                        free(attrName);
                         attrName=(char*)malloc(attrNameBufferSize);
                         attrValueBufferSize=DEFAULT_NODE_PARSER_ATTR_VALUE_BUFFER_SIZE;
                         attrValueLength=0;
+                        free(attrValue);
                         attrValue=(char*)malloc(attrValueBufferSize);
                         isAttrValue=false;
                         HTML_PARSER_FINALIZE_TAG;
@@ -639,6 +662,7 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                 thisNode->type=NODE_TYPE_COMMENT;
                 // Allocate value buffer:
                 thisNode->valueBufferSize=DEFAULT_NODE_PARSER_TEXT_CONTENT_BUFFER_SIZE; // Not an attribute value
+                free(thisNode->value);
                 thisNode->value=(char*)malloc(thisNode->valueBufferSize);
                 NodeCollection::addNode(nodes,nodeCount,bufferSize,thisNode);
                 openNodeCollectionLength--; // Remove this node. It is the last one.
@@ -651,6 +675,7 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                 Node *thisNode=openNodes[openNodeCollectionLength-1];
                 thisNode->type=NODE_TYPE_CDATA;
                 thisNode->valueBufferSize=DEFAULT_NODE_PARSER_TEXT_CONTENT_BUFFER_SIZE; // Not an attribute value
+                free(thisNode->value);
                 thisNode->value=(char*)malloc(thisNode->valueBufferSize);
                 NodeCollection::addNode(nodes,nodeCount,bufferSize,thisNode);
                 openNodeCollectionLength--; // Remove this node. It is the last one.
@@ -670,7 +695,9 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                 // Check if the last two characters were both -
                 if(thisNode->valueLength>1&&thisNode->value[thisNode->valueLength-1]=='-'&&thisNode->value[thisNode->valueLength-2]=='-')
                 {
-                    thisNode->value=text::firstChars(thisNode->value,thisNode->valueLength-2); // Just to be safe, if someone ignores thisNode->valueLength.
+                    char *newValue=text::firstChars(thisNode->value,thisNode->valueLength-2);
+                    free(thisNode->value);
+                    thisNode->value=newValue; // Just to be safe, if someone ignores thisNode->valueLength.
                     thisNode->valueLength-=2;
                     isComment=false;
                     HTML_PARSER_NEXT_ITERATION;
@@ -714,7 +741,9 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
                 // Check if the last two characters were both ]
                 if(thisNode->valueLength>1&&thisNode->value[thisNode->valueLength-1]==']'&&thisNode->value[thisNode->valueLength-2]==']')
                 {
-                    thisNode->value=text::firstChars(thisNode->value,thisNode->valueLength-2); // Just to be safe, if someone ignores thisNode->valueLength.
+                    char *newValue=text::firstChars(thisNode->value,thisNode->valueLength-2);
+                    free(thisNode->value);
+                    thisNode->value=newValue; // Just to be safe, if someone ignores thisNode->valueLength.
                     thisNode->valueLength-=2;
                     isCDATA=false;
                     HTML_PARSER_NEXT_ITERATION;
@@ -731,10 +760,11 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
         }
         if(!isTextNode)
         {
-            Node *n=new Node(nextNodeId++,NODE_TYPE_TEXT,"",0,"");
+            Node *n=new Node(nextNodeId++,NODE_TYPE_TEXT,strdup(""),0,strdup(""));
             n->parent=openNodes[openNodeCollectionLength-1]->id;
             NodeCollection::addChild(openNodes[openNodeCollectionLength-1],n->id);
             n->valueBufferSize=DEFAULT_NODE_PARSER_TEXT_CONTENT_BUFFER_SIZE;
+            free(thisNode->value);
             n->value=(char*)malloc(n->valueBufferSize);
             NodeCollection::addNode(nodes,nodeCount,bufferSize,n);
             isTextNode=true;
@@ -765,6 +795,15 @@ html::Node **html::parser::parse(char *source, node_id_t &nodeCount, node_id_t &
 
     for(node_id_t i=0;i<openNodeCollectionLength;i++)
         NodeCollection::addNode(nodes,nodeCount,bufferSize,openNodes[i]);
+    free(openNodes);
+
+    // Free buffers
+
+    free(nonWhitespaceString);
+    free(attrName);
+    free(attrValue);
+    free(tagName);
+    free(plaintextEnd);
 
     // Undefine macros
 
@@ -791,17 +830,23 @@ char *html::parser::serialize(html::Node **nodes, node_id_t size, html::Node *ro
     }
     else if(rootNode->type==NODE_TYPE_ATTRIBUTE)
     {
-        io::writeZeroTerminatedDataToBuffer(out,text::concat(rootNode->name,"=\"",text::escapeDoubleQuotationMarks(rootNode->value),"\""),pos,bufferSize);
+        char *str=text::concat(rootNode->name,"=\"",text::escapeDoubleQuotationMarks(rootNode->value),"\"");
+        io::writeZeroTerminatedDataToBuffer(out,str,pos,bufferSize);
+        free(str);
         return out;
     }
     else if(rootNode->type==NODE_TYPE_COMMENT)
     {
-        io::writeZeroTerminatedDataToBuffer(out,text::concat("<!--",rootNode->value,"-->"),pos,bufferSize);
+        char *str=text::concat("<!--",rootNode->value,"-->");
+        io::writeZeroTerminatedDataToBuffer(out,str,pos,bufferSize);
+        free(str);
         return out;
     }
     else if(rootNode->type==NODE_TYPE_CDATA)
     {
-        io::writeZeroTerminatedDataToBuffer(out,text::concat("<![CDATA[",rootNode->value,"]]>"),pos,bufferSize);
+        char *str=text::concat("<![CDATA[",rootNode->value,"]]>");
+        io::writeZeroTerminatedDataToBuffer(out,str,pos,bufferSize);
+        free(str);
         return out;
     }
 
@@ -815,13 +860,17 @@ char *html::parser::serialize(html::Node **nodes, node_id_t size, html::Node *ro
     {
         char *add=text::concat("<",rootNode->name);
         io::writeRawDataToBuffer(out,add,strlen(add),pos,bufferSize);
+        free(add);
         for(node_id_t i=0;i<rootNode->childCount;i++)
         {
             Node *thisChild=children[i];
             if(thisChild->type==NODE_TYPE_ATTRIBUTE)
             {
-                char *attrStr=text::concat(" ",thisChild->name,"=\"",text::escapeDoubleQuotationMarks(thisChild->value),"\"");
+                char *esc=text::escapeDoubleQuotationMarks(thisChild->value);
+                char *attrStr=text::concat(" ",thisChild->name,"=\"",esc,"\"");
                 io::writeRawDataToBuffer(out,attrStr,strlen(attrStr),pos,bufferSize);
+                free(esc);
+                free(attrStr);
             }
             else
                 foundInner=true;
@@ -850,6 +899,7 @@ char *html::parser::serialize(html::Node **nodes, node_id_t size, html::Node *ro
             {
                 char *endTag=text::concat("></",rootNode->name); // The closing > gets added below.
                 io::writeRawDataToBuffer(out,endTag,strlen(endTag),pos,bufferSize);
+                free(endTag);
             }
         }
         io::writeRawCharToBuffer(out,'>',pos,bufferSize);
@@ -858,6 +908,7 @@ char *html::parser::serialize(html::Node **nodes, node_id_t size, html::Node *ro
     {
         char *doctypeDeclaration=text::concat("<!DOCTYPE ",rootNode->value,">");
         io::writeRawDataToBuffer(out,doctypeDeclaration,strlen(doctypeDeclaration),pos,bufferSize);
+        free(doctypeDeclaration);
     }
     if(isPlaintext) // Not "else if"! The condition below is true for DOCTYPE nodes!
     {
@@ -886,6 +937,7 @@ char *html::parser::serialize(html::Node **nodes, node_id_t size, html::Node *ro
     {
         char *endTag=text::concat("</",rootNode->name,">");
         io::writeRawDataToBuffer(out,endTag,strlen(endTag),pos,bufferSize);
+        free(endTag);
     }
     else if(isDoctypeDeclaration&&!foundHtml)
     {

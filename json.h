@@ -35,6 +35,7 @@ namespace json
         Value(char *_name);
         Value(char *_name,uint8_t _type);
         Value(char *_name,uint8_t _type,char *_value);
+        ~Value();
     };
 
     class ValueManager
@@ -75,7 +76,8 @@ namespace json
         static Value **parse(char *source, uint32_t &size, uint32_t &stoppedAt);
         static char *serialize(Value **values,uint32_t size);
         static char *serialize(Value **values,uint32_t size,uint8_t baseType);
+        static void freeResultArray(Value **values,uint32_t size);
     };
-};
+}
 
 #endif // JSON_H

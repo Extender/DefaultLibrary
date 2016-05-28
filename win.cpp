@@ -10,26 +10,33 @@ wchar_t *win::getLongString(char *shortStr)
 
 uint64_t win::getFileSize(char *path)
 {
-    HANDLE f=CreateFile(getLongString(path),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+    wchar_t *longPath=getLongString(path);
+    HANDLE f=CreateFile(longPath,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
     DWORD out=GetFileSize(f,NULL);
     CloseHandle(f);
+    free(longPath);
     return out;
 }
 
 bool win::fileExists(char *path)
 {
-    DWORD attrs=GetFileAttributes(getLongString(path));
+    wchar_t *longPath=getLongString(path);
+    DWORD attrs=GetFileAttributes(longPath);
+    free(longPath);
     return attrs!=INVALID_FILE_ATTRIBUTES&&(attrs&FILE_ATTRIBUTE_DIRECTORY)!=FILE_ATTRIBUTE_DIRECTORY;
 }
 
 bool win::dirExists(char *path)
 {
-    DWORD attrs=GetFileAttributes(getLongString(path));
+    wchar_t *longPath=getLongString(path);
+    DWORD attrs=GetFileAttributes(longPath);
+    free(longPath);
     return attrs!=INVALID_FILE_ATTRIBUTES&&(attrs&FILE_ATTRIBUTE_DIRECTORY)==FILE_ATTRIBUTE_DIRECTORY;
 }
 
 bool win::createDirectory(char *path)
 {
+    path=strdup(path);
     if(text::indexOf(path,"/")!=pos_notFound)
         path=text::replace(path,"/","\\");
     std::vector<char*> parts=text::split(path,"\\");
@@ -38,12 +45,20 @@ bool win::createDirectory(char *path)
     char *temp=(char*)calloc(bufferSize,1);
     for(uint32_t i=0;i<parts.size()-1;i++)
     {
-        char *append=text::concat(i>0?"\\":"",parts.at(i));
+        char *part=parts.at(i);
+        char *append=text::concat(i>0?"\\":"",part);
         io::writeRawDataToBuffer(temp,append,strlen(append),pos,bufferSize);
         if(!dirExists(temp))
             createDirectory(temp);
+        free(append);
+        free(part);
     }
-    return CreateDirectory(getLongString(path),NULL);
+    free(temp);
+    wchar_t *longPath=getLongString(path);
+    bool result=CreateDirectory(longPath,NULL);
+    free(path);
+    free(longPath);
+    return result;
 }
 
 char *win::getShortString(wchar_t *longStr)
@@ -57,7 +72,9 @@ char *win::getShortString(wchar_t *longStr)
 char *win::readFile(char *path, uint64_t &size)
 {
     HANDLE file;
-    file=CreateFile(getLongString(path),GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+    wchar_t *longPath=getLongString(path);
+    file=CreateFile(longPath,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+    free(longPath);
     if(file==INVALID_HANDLE_VALUE)
     {
         size=0;
@@ -81,7 +98,9 @@ char *win::readFile(char *path, uint64_t &size)
 bool win::writeFile(char *path, char *data, uint64_t size)
 {
     HANDLE file;
-    file=CreateFile(getLongString(path),GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+    wchar_t *longPath=getLongString(path);
+    file=CreateFile(longPath,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+    free(longPath);
     if(file==INVALID_HANDLE_VALUE)
     {
         puts("Error 1.");
@@ -95,7 +114,10 @@ bool win::writeFile(char *path, char *data, uint64_t size)
 
 bool win::deleteFile(char *path)
 {
-    return DeleteFile(getLongString(path));
+    wchar_t *longPath=getLongString(path);
+    bool result=DeleteFile(longPath);
+    free(longPath);
+    return result;
 }
 
 bool win::deleteDir(char *path)
@@ -108,18 +130,36 @@ bool win::deleteDir(char *path)
     uint32_t fileCount=files->size();
     uint32_t dirCount=dirs->size();
     if(fileCount+dirCount==0)
-        return RemoveDirectory(longPath);
+    {
+        bool result=RemoveDirectory(longPath);
+        free(longPath);
+        return result;
+    }
     for(uint32_t i=0;i<fileCount;i++)
     {
-        if(!deleteFile(text::concatPaths(path,files->at(i))))
+        char *elementPath=text::concatPaths(path,files->at(i));
+        bool del=deleteFile(elementPath);
+        free(elementPath);
+        if(!del)
+        {
+            free(longPath);
             return false;
+        }
     }
     for(uint32_t i=0;i<dirCount;i++)
     {
-        if(!deleteDir(text::concatPaths(path,dirs->at(i))))
+        char *elementPath=text::concatPaths(path,dirs->at(i));
+        bool del=deleteDir(elementPath);
+        free(elementPath);
+        if(!del)
+        {
+            free(longPath);
             return false;
+        }
     }
-    return RemoveDirectory(longPath);
+    bool result=RemoveDirectory(longPath);
+    free(longPath);
+    return result;
 
 }
 
@@ -142,12 +182,17 @@ std::vector<char *> *win::listFilesAndDirs(char *dir)
 std::vector<char *> *win::listFilesAndDirs(char *dir, uint32_t filter)
 {
     std::vector<char*> *out=new std::vector<char*>();
-    wchar_t *longDirName=text::concatWideString(getLongString(dir),L"\\*");
+    wchar_t *longInDir=getLongString(dir);
+    wchar_t *longDirName=text::concatWideString(longInDir,L"\\*");
+    free(longInDir);
     WIN32_FIND_DATA ffd;
     HANDLE hFind;
     hFind=FindFirstFile(longDirName,&ffd);
     if(hFind==INVALID_HANDLE_VALUE)
+    {
+        free(longDirName);
         return out;
+    }
     bool hasFilter=filter!=0;
     bool filesOnly=filter==~FILE_ATTRIBUTE_DIRECTORY;
     do
@@ -171,5 +216,6 @@ std::vector<char *> *win::listFilesAndDirs(char *dir, uint32_t filter)
     }
     while(FindNextFile(hFind,&ffd)!=0);
     FindClose(hFind);
+    free(longDirName);
     return out;
 }

@@ -3,7 +3,10 @@
 bool winnet::downloadFile(char *url, char *filePath)
 {
     wchar_t *path=win::getLongString(filePath);
-    HRESULT result=URLDownloadToFileW(NULL,win::getLongString(url),path,0,NULL);
+    wchar_t *url=win::getLongString(url);
+    HRESULT result=URLDownloadToFileW(NULL,url,path,0,NULL);
+    free(path);
+    free(url);
     return result==S_OK;
 }
 
@@ -18,7 +21,7 @@ char *winnet::downloadData(char *url, uint32_t &size)
 
     wchar_t *longUrl=win::getLongString(url);
 
-    URL_COMPONENTS urlComponents;
+    URL_COMPONENTS urlComponents; // Does not need to be freed
 
     ZeroMemory(&urlComponents,sizeof(urlComponents));
     urlComponents.dwStructSize=sizeof(urlComponents);
@@ -30,6 +33,7 @@ char *winnet::downloadData(char *url, uint32_t &size)
     urlComponents.dwExtraInfoLength=-1;
     if(!WinHttpCrackUrl(longUrl,wcslen(longUrl),0,&urlComponents))
         printf("Error (0): %i",GetLastError());
+    free(longUrl);
 
     hSession=WinHttpOpen(L"Download request/1.0",
                          WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,

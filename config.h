@@ -9,6 +9,9 @@ struct ConfigValue
     bool zeroTerminated;
     fs_t valueLength;
     char *value;
+
+    ConfigValue(fs_t _valueLength,char *_value,bool _zeroTerminated);
+    ~ConfigValue();
 };
 
 #define config_key_t char *
@@ -34,6 +37,7 @@ public:
     static bool hasKey(std::vector<std::pair<config_key_t,config_value_t> *> *values,config_key_t key);
     static bool removeKey(std::vector<std::pair<config_key_t,config_value_t> *> *values,config_key_t key);
     static char *serializeConfig(std::vector<std::pair<config_key_t,config_value_t> *> *values,fs_t &length);
+    static void freeValueArray(std::vector<std::pair<config_key_t,config_value_t> *> *values);
 };
 
 #endif // CONFIG_H

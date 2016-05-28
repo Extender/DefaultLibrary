@@ -142,7 +142,7 @@ char *json::ValueManager::fromArray(json::Value **in, uint32_t size)
 {
     // The same as below.
     Value **out=(Value**)calloc(size+1,sizeof(Value*));
-    Value *sizeValue=new Value("",JSON_VALUE_TYPE_INT32,fromInt32(size));
+    Value *sizeValue=new Value(strdup(""),JSON_VALUE_TYPE_INT32,fromInt32(size));
     out[0]=sizeValue;
     for(uint32_t i=0;i<size;i++)
         out[i+1]=in[i];
@@ -153,7 +153,7 @@ char *json::ValueManager::fromMap(json::Value **in, uint32_t size)
 {
     // The same as above.
     Value **out=(Value**)calloc(size+1,sizeof(Value*));
-    Value *sizeValue=new Value("",JSON_VALUE_TYPE_INT32,fromInt32(size));
+    Value *sizeValue=new Value(strdup(""),JSON_VALUE_TYPE_INT32,fromInt32(size));
     out[0]=sizeValue;
     for(uint32_t i=0;i<size;i++)
         out[i+1]=in[i];
@@ -201,6 +201,8 @@ void json::ValueManager::setValue(Value **&array, uint32_t &arraySize, Value *va
     {
         if(strcmp(array[i]->name,value->name)==0)
         {
+            free(array[i]->name);
+            free(array[i]->value);
             array[i]=value;
             return;
         }
@@ -209,6 +211,7 @@ void json::ValueManager::setValue(Value **&array, uint32_t &arraySize, Value *va
     Value **newArray=(Value**)malloc(arraySize*sizeof(Value*));
     if(arraySize>1)
         memcpy(newArray,array,(arraySize-1)*sizeof(Value*));
+    free(array);
     array=newArray;
     array[arraySize-1]=value;
 }
@@ -228,6 +231,7 @@ bool json::ValueManager::removeKey(json::Value **&array, uint32_t &arraySize, ch
                 newArray[c++]=array[j];
             }
             arraySize--;
+            free(array);
             array=newArray;
             return true;
         }
@@ -246,29 +250,30 @@ void json::ValueManager::removeAt(json::Value **&array, uint32_t &arraySize, uin
         newArray[c++]=array[j];
     }
     arraySize--;
+    free(array);
     array=newArray;
 }
 
 
 json::Value::Value()
 {
-    name="";
+    name=strdup("");
     type=0;
-    value="";
+    value=strdup("");
 }
 
 json::Value::Value(char *_name)
 {
     name=_name;
     type=0;
-    value="";
+    value=strdup("");
 }
 
 json::Value::Value(char *_name, uint8_t _type)
 {
     name=_name;
     type=_type;
-    value="";
+    value=strdup("");
 }
 
 json::Value::Value(char *_name, uint8_t _type, char *_value)
@@ -276,6 +281,12 @@ json::Value::Value(char *_name, uint8_t _type, char *_value)
     name=_name;
     type=_type;
     value=_value;
+}
+
+json::Value::~Value()
+{
+    free(name);
+    free(value);
 }
 
 
@@ -320,7 +331,7 @@ json::Value **json::parser::parse(char *source, uint32_t &size, uint32_t &stoppe
         if(l>=INT32_MIN&&l<=INT32_MAX)\
             thisType=JSON_VALUE_TYPE_INT32;\
     }\
-    char *thisAttrName="";\
+    char *thisAttrName;\
     if(isMap)\
     {\
         "Copy the string, else all names will be that of the last element.";\
@@ -328,7 +339,7 @@ json::Value **json::parser::parse(char *source, uint32_t &size, uint32_t &stoppe
         memcpy(thisAttrName,attrName,attrNameLength);\
     }\
     else\
-        thisAttrName="";\
+        thisAttrName=strdup("");\
     if(thisType==JSON_VALUE_TYPE_STRING)\
         v=new Value(thisAttrName,JSON_VALUE_TYPE_STRING,ValueManager::fromString(text::unescape(attrValue)));\
     else if(thisType==JSON_VALUE_TYPE_INT32)\
@@ -342,9 +353,15 @@ json::Value **json::parser::parse(char *source, uint32_t &size, uint32_t &stoppe
     else if(thisType==JSON_VALUE_TYPE_BOOL)\
         v=new Value(thisAttrName,JSON_VALUE_TYPE_BOOL,ValueManager::fromBool(stricmp(attrValue,"true")==0));\
     else if(thisType==JSON_VALUE_TYPE_ARRAY)\
+    {\
         v=new Value(thisAttrName,JSON_VALUE_TYPE_ARRAY,ValueManager::fromArray(subarray,subarraySize));\
+        freeResultArray(subarray,subarraySize);\
+    }\
     else if(thisType==JSON_VALUE_TYPE_MAP)\
+    {\
         v=new Value(thisAttrName,JSON_VALUE_TYPE_MAP,ValueManager::fromMap(subarray,subarraySize));\
+        freeResultArray(subarray,subarraySize);\
+    }\
     values[size++]=v;\
     addToValue=true;\
     attrNameLength=0;\
@@ -465,6 +482,9 @@ json::Value **json::parser::parse(char *source, uint32_t &size, uint32_t &stoppe
     #undef JSON_PARSER_NEXT_ITERATION
     #undef JSON_PARSER_ADD_ATTR
 
+    free(attrName);
+    free(attrValue);
+
     return values;
 }
 
@@ -497,42 +517,57 @@ char *json::parser::serialize(json::Value **values, uint32_t size, uint8_t baseT
         {
             nameStr=text::concat("\"",thisValue->name,"\":");
             io::writeRawDataToBuffer(out,nameStr,nameLength+3,pos,bufferSize); // Include the "":, but not the zero terminator
+            free(nameStr);
         }
         if(thisValue->type==JSON_VALUE_TYPE_STRING)
         {
             char *in=text::concat("\"",text::escape(ValueManager::getString(thisValue)),"\"");
             io::writeRawDataToBuffer(out,in,strlen(in),pos,bufferSize);
+            free(in);
         }
         else if(thisValue->type==JSON_VALUE_TYPE_INT32)
         {
             char *in=text::toString(ValueManager::getInt32(thisValue));
             io::writeRawDataToBuffer(out,in,strlen(in),pos,bufferSize);
+            free(in);
         }
         else if(thisValue->type==JSON_VALUE_TYPE_INT64)
         {
             char *in=text::longToString(ValueManager::getInt64(thisValue));
             io::writeRawDataToBuffer(out,in,strlen(in),pos,bufferSize);
+            free(in);
         }
         else if(thisValue->type==JSON_VALUE_TYPE_BOOL)
         {
             char *in=ValueManager::getBool(thisValue)?"true":"false";
             io::writeRawDataToBuffer(out,in,strlen(in),pos,bufferSize);
+            free(in);
         }
         else if(thisValue->type==JSON_VALUE_TYPE_DOUBLE)
         {
             char *in=text::doubleToString(ValueManager::getDouble(thisValue));
             io::writeRawDataToBuffer(out,in,strlen(in),pos,bufferSize);
+            free(in);
         }
         else if(thisValue->type==JSON_VALUE_TYPE_ARRAY||thisValue->type==JSON_VALUE_TYPE_MAP)
         {
             uint32_t tempSize;
             Value **arr=ValueManager::getArray(thisValue,tempSize);
             char *in=serialize(arr,tempSize,thisValue->type);
+            freeResultArray(arr,tempSize);
             uint32_t len=strlen(in);
             io::writeRawDataToBuffer(out,in,len,pos,bufferSize);
+            free(in);
         }
     }
     io::writeRawCharToBuffer(out,isArray?']':'}',pos,bufferSize);
     io::terminateBuffer(out,pos,bufferSize);
     return out;
+}
+
+void json::parser::freeResultArray(json::Value **values, uint32_t size)
+{
+    for(fs_t i=0;i<size;i++)
+        delete values[i];
+    free(values);
 }
