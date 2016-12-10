@@ -8,10 +8,11 @@
 
 #define ini_allSections "*" // WARNING: Default: ini_noSection!
 #define ini_noSection ""
-#define ini_key_t char *
-#define ini_value_t char *
 
 #define DEFAULT_INI_BUFFER_SIZE 1024
+
+typedef char* ini_value_t;
+typedef char* ini_key_t;
 
 class ini
 {
@@ -29,10 +30,12 @@ public:
     static std::vector<std::pair<ini_key_t,ini_value_t> *> *getValues(char *iniSource);
     static std::vector<std::pair<ini_key_t,ini_value_t> *> *getValues(char *iniSource,char *section);
     static void setValue(std::vector<std::pair<ini_key_t,ini_value_t> *> *values,ini_key_t key,ini_value_t value);
+    static void setValue(std::vector<std::pair<ini_key_t,ini_value_t> *> *values,const char* key,const char* value);
     static bool hasKey(std::vector<std::pair<ini_key_t,ini_value_t> *> *values,ini_key_t key);
     static bool removeKey(std::vector<std::pair<ini_key_t,ini_value_t> *> *values,ini_key_t key);
     static char *serializeSection(std::vector<std::pair<ini_key_t,ini_value_t> *> *values);
     static char *serializeSection(std::vector<std::pair<ini_key_t,ini_value_t> *> *values,char *sectionName);
+    static void freeAndDeleteCharArrayValueVector(std::vector<std::pair<char*,char*> *> *values);
 };
 
 #endif // INI_H

@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-typedef size_t fs_t;
-
 #define extendBufferSize(bufferSize, pos) while(pos>=bufferSize) bufferSize*=2;
+
+typedef size_t fs_t;
 
 class io
 {
