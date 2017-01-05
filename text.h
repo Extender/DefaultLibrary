@@ -87,8 +87,10 @@ public:
     static char *unescape(const char *str); // Unescapes all instances of \ " '
     static char *escapeDoubleQuotationMarks(const char *str); // Escapes all instances of \ "
     static char *unescapeDoubleQuotationMarks(const char *str); // Unescapes all instances of \ "
+    static char *unescapeDoubleQuotationMarksUntilEnd(const char *str,bool excludeFirst=true); // Unescapes all instances of \ " until a valid closing " is met
     static char *escapeSingleQuotationMarks(const char *str); // Escapes all instances of \ '
     static char *unescapeSingleQuotationMarks(const char *str); // Unescapes all instances of \ '
+    static char *unescapeSingleQuotationMarksUntilEnd(const char *str,bool excludeFirst=true); // Unescapes all instances of \ ' until a valid closing ' is met
     static std::vector<char*> split(const char *in,const char *separator);
     static std::vector<std::string> splitToStringArray(const char *in,const char *separator);
     static void freeCharArrayVectorContents(std::vector<char*> vector);

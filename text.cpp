@@ -1202,6 +1202,58 @@ char *text::unescapeDoubleQuotationMarks(const char *str)
     return out;
 }
 
+char *text::unescapeDoubleQuotationMarksUntilEnd(const char *str, bool excludeFirst)
+{
+    size_t length=strlen(str);
+    size_t outPos=0;
+    char *out=(char*)mkstr(length); // Max possible size.
+    char thisChar;
+    char prevChar=0;
+    bool nonWhitespacePassed=false;
+
+    #define TEXT_UNESCAPE_NEXT_ITERATION \
+    \
+    prevChar=thisChar;\
+    continue;
+
+    for(size_t i=0;i<length;i++)
+    {
+        thisChar=str[i];
+        if(thisChar=='"')
+        {
+            if(prevChar=='\\')
+            {
+                out[outPos-1]=thisChar; // No ++ here.
+                TEXT_UNESCAPE_NEXT_ITERATION;
+            }
+            // Reached valid closing "
+            if(!nonWhitespacePassed&&excludeFirst)
+                continue;
+            out[outPos]=0;
+            return out;
+        }
+        else if(thisChar=='\\')
+        {
+            if(prevChar=='\\')
+            {
+                prevChar=0;
+                continue; // Not TEXT_UNESCAPE_NEXT_ITERATION, we want to avoid errors if: \\"
+            }
+        }
+        if(!nonWhitespacePassed&&!isWhitespace(thisChar))
+            nonWhitespacePassed=true;
+
+        out[outPos++]=thisChar;
+        TEXT_UNESCAPE_NEXT_ITERATION;
+    }
+
+    out[outPos]=0; // Terminate the string.
+
+    #undef TEXT_UNESCAPE_NEXT_ITERATION
+
+    return out;
+}
+
 char *text::escapeSingleQuotationMarks(const char *str)
 {
     size_t length=strlen(str);
@@ -1259,9 +1311,61 @@ char *text::unescapeSingleQuotationMarks(const char *str)
             if(prevChar=='\\')
             {
                 prevChar=0;
-                continue; // Not TEXT_UNESCAPE_NEXT_ITERATION, we want to avoid errors if: \\"
+                continue; // Not TEXT_UNESCAPE_NEXT_ITERATION, we want to avoid errors if: \\'
             }
         }
+        out[outPos++]=thisChar;
+        TEXT_UNESCAPE_NEXT_ITERATION;
+    }
+
+    out[outPos]=0; // Terminate the string.
+
+    #undef TEXT_UNESCAPE_NEXT_ITERATION
+
+    return out;
+}
+
+char *text::unescapeSingleQuotationMarksUntilEnd(const char *str, bool excludeFirst)
+{
+    size_t length=strlen(str);
+    size_t outPos=0;
+    char *out=(char*)mkstr(length); // Max possible size.
+    char thisChar;
+    char prevChar=0;
+    bool nonWhitespacePassed=false;
+
+    #define TEXT_UNESCAPE_NEXT_ITERATION \
+    \
+    prevChar=thisChar;\
+    continue;
+
+    for(size_t i=0;i<length;i++)
+    {
+        thisChar=str[i];
+        if(thisChar=='\'')
+        {
+            if(prevChar=='\\')
+            {
+                out[outPos-1]=thisChar; // No ++ here.
+                TEXT_UNESCAPE_NEXT_ITERATION;
+            }
+            // Reached valid closing '
+            if(!nonWhitespacePassed&&excludeFirst)
+                continue;
+            out[outPos]=0;
+            return out;
+        }
+        else if(thisChar=='\\')
+        {
+            if(prevChar=='\\')
+            {
+                prevChar=0;
+                continue; // Not TEXT_UNESCAPE_NEXT_ITERATION, we want to avoid errors if: \\'
+            }
+        }
+        if(!nonWhitespacePassed&&!isWhitespace(thisChar))
+            nonWhitespacePassed=true;
+
         out[outPos++]=thisChar;
         TEXT_UNESCAPE_NEXT_ITERATION;
     }
