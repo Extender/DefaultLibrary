@@ -65,7 +65,7 @@ std::map<std::string, std::string> args::getValues(int argc, char *argv[], bool 
     return out;
 }
 
-bool args::hasFlag(int argc, char *argv[], char *flag, bool skipFirst)
+bool args::hasFlag(int argc, char *argv[], const char *flag, bool skipFirst)
 {
     for(size_t i=(skipFirst?1:0);i<(size_t)argc;i++)
     {
@@ -100,7 +100,7 @@ bool args::hasFlag(int argc, char *argv[], char *flag, bool skipFirst)
     return false;
 }
 
-std::string args::getValue(int argc, char *argv[], char *flag, bool skipFirst)
+std::string args::getValue(int argc, char *argv[], const char *flag, bool skipFirst)
 {
     std::string flagStr=std::string(flag);
     for(size_t i=(skipFirst?1:0);i<(size_t)argc;i++)
