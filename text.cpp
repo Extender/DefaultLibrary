@@ -376,12 +376,12 @@ char *text::doubleToString(double in) // Warning: precision loss (inavoidable)
     char *fStr=unsignedLongToString(roundl((f*pow((double)10,15))/10.0)); // Precision loss inavoidable.
     int iStrLen=strlen(iStr);
     int fStrLen=strlen(fStr);
-    uint8_t emptyDecimals=(uint8_t)((double)(floor(log10((double)f))+1)*-1.0);
+    uint8_t emptyDecimals=f==0.0?0:(uint8_t)((double)(floor(log10((double)f))+1)*-1.0);
     if(emptyDecimals>0)
     {
         // Prepend empty decimals
         char *zeroString=mkstr(emptyDecimals);
-        memset(zeroString,emptyDecimals,'0');
+        memset(zeroString,'0',emptyDecimals);
         char *nStr=concat(zeroString,fStr);
         free(fStr);
         fStr=nStr;
@@ -429,22 +429,45 @@ char *text::doubleToStringWithFixedPrecision(double in, uint8_t precision)
     char *fStr=unsignedLongToString(roundl((f*pow((double)10,precision+1))/10.0)); // Precision loss inavoidable.
     int iStrLen=strlen(iStr);
     int fStrLen=strlen(fStr);
-    uint8_t emptyDecimals=(uint8_t)((double)(floor(log10((double)f))+1)*-1.0);
-    if(emptyDecimals>0)
+    uint8_t emptyDecimals;
+    if(f==0.0)
     {
-        if(emptyDecimals>precision)
-            precision=emptyDecimals;
-        // Prepend empty decimals
-        char *zeroString=mkstr(emptyDecimals);
-        memset(zeroString,emptyDecimals,'0');
-        char *nStr=concat(zeroString,fStr);
+        emptyDecimals=0;
+        char *azStr=mkstr(precision);
+        memset(azStr,'0',precision);
         free(fStr);
-        fStr=nStr;
-        fStrLen+=emptyDecimals;
-        free(zeroString);
+        fStr=azStr;
+        fStrLen=precision;
     }
-    while(fStr[fStrLen-1]=='0'&&fStrLen>(precision>1?precision:1))
-        fStrLen--;
+    else
+    {
+        emptyDecimals=(uint8_t)((double)(floor(log10((double)f))+1)*-1.0);
+        if(emptyDecimals>0)
+        {
+            // Prepend empty decimals
+            fStrLen+=emptyDecimals;
+            bool appendZeros=fStrLen<precision;
+            int zerosToAppend=precision-fStrLen;
+            char *zeroString=mkstr(emptyDecimals);
+            memset(zeroString,'0',emptyDecimals);
+            char *nStr;
+            if(appendZeros)
+            {
+                char *azStr=mkstr(zerosToAppend);
+                memset(azStr,'0',zerosToAppend);
+                nStr=concat(zeroString,fStr,azStr);
+                free(azStr);
+                fStrLen+=zerosToAppend;
+            }
+            else
+                nStr=concat(zeroString,fStr);
+            free(fStr);
+            fStr=nStr;
+            free(zeroString);
+        }
+        while(fStr[fStrLen-1]=='0'&&fStrLen>(precision>1?precision:1))
+            fStrLen--;
+    }
     if(negative)
     {
         char *out=(char*)malloc(iStrLen+fStrLen+3+emptyDecimals); // Zero-terminator, "-" and "."
