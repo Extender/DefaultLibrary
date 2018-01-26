@@ -4,14 +4,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
-#include <string.h>
+#include <string>
 #include <memory.h>
 #include <ctype.h>
 #include <vector>
-#include <sstream>
-#include <limits>
 
-#define pos_notFound (std::numeric_limits<size_t>::max())
+#define pos_notFound SIZE_MAX
 
 typedef size_t text_t;
 

@@ -1682,7 +1682,7 @@ std::string text::strToLower(std::string str)
 
 bool text::iCompare(std::string strA, std::string strB)
 {
-    return strToLower(strA)==strToLower(strB);
+    return strToLower(strA).compare(strToLower(strB))==0;
 }
 
 bool text::iCompare(const char *strA, const char *strB)
@@ -1755,7 +1755,7 @@ bool text::startsWith(std::string str, std::string with)
     size_t withLen=with.length();
     if(withLen>strLen||withLen==0)
         return false;
-    return str.substr(0,withLen)==with;
+    return str.substr(0,withLen).compare(with)==0;
 }
 
 bool text::endsWith(std::string str, std::string with)
@@ -1764,7 +1764,7 @@ bool text::endsWith(std::string str, std::string with)
     size_t withLen=with.length();
     if(withLen>strLen||withLen==0)
         return false;
-    return str.substr(strLen-withLen)==with;
+    return str.substr(strLen-withLen).compare(with)==0;
 }
 
 bool text::iStartsWith(std::string str, std::string with)
