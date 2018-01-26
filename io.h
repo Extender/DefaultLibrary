@@ -87,7 +87,7 @@ public:
     static void writeRawCharToLongBuffer(char *&data, unsigned char in, uint64_t &pos, uint64_t &bufferSize);
 
     static void terminateBuffer(char *&buffer, fs_t &pos, fs_t bufferSize);
-    static void *fixedLengthDataToString(char *data, fs_t length);
+    static char *fixedLengthDataToString(char *data, fs_t length);
     static bool bufferCheck(char *&buffer, fs_t pos, fs_t &bufferSize);
     static bool longBufferCheck(char *&buffer, uint64_t pos, uint64_t &bufferSize);
 

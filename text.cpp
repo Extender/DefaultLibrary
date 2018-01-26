@@ -495,20 +495,20 @@ char *text::unsignedIntToString(uint32_t in)
     char *out=(char*)calloc(11,1); // 10+1
     uint32_t *temp=(uint32_t*)calloc(11,sizeof(uint32_t)); // Retrieve a single value for each position.
     temp[0]=in;
-    for(uint8_t i=0;i<9;i++) // Amount of decimals in highest possible unsigned int - 1 (highest position will never be >9) (10-1).
+    for(short /*Not char!*/ i=0;i<9;i++) // Amount of decimals in highest possible unsigned int - 1 (highest position will never be >9) (10-1).
     {
         uint32_t t=temp[i];
-        uint32_t r=t%10;
-        uint32_t n=(t-r)/10;
+        uint32_t r=t%(uint32_t)10;
+        uint32_t n=(t-r)/(uint32_t)10;
         temp[i+1]=n;
         temp[i]=r;
         if(n==0)
             break;
     }
-    char reachedValueAt=-1;
-    for(char i=9;i>=0;i--) // Amount of decimals in highest possible unsigned int - 1 (highest position will never be >9) (10-1).
+    short reachedValueAt=-1; // Not char!
+    for(short /*Not char!*/ i=9;i>=0;i--) // Amount of decimals in highest possible unsigned int - 1 (highest position will never be >9) (10-1).
     {
-        uint32_t t=temp[(uint8_t)i];
+        uint32_t t=temp[i];
         if(reachedValueAt==-1)
         {
             if(t==0)
@@ -531,20 +531,20 @@ char *text::unsignedLongToString(uint64_t in)
     char *out=(char*)calloc(21,1); // Amount of decimals in highest possible unsigned long + zero-terminator (20+1)
     uint64_t *temp=(uint64_t*)calloc(sizeof(uint64_t)*20,sizeof(uint64_t)); // Retrieve a single value for each position.
     temp[0]=in;
-    for(uint8_t i=0;i<19;i++) // Amount of decimals in highest possible unsigned long - 1 (highest position will never be >9) (20-1).
+    for(short /*Not char!*/ i=0;i<19;i++) // Amount of decimals in highest possible unsigned long - 1 (highest position will never be >9) (20-1).
     {
         uint64_t t=temp[i];
-        uint64_t r=t%10;
-        uint64_t n=(t-r)/10;
+        uint64_t r=t%(uint64_t)10;
+        uint64_t n=(t-r)/(uint64_t)10;
         temp[i+1]=n;
         temp[i]=r;
         if(n==0)
             break;
     }
-    char reachedValueAt=-1;
-    for(char i=19;i>=0;i--) // Amount of decimals in highest possible unsigned long - 1 (highest position will never be >9) (20-1).
+    short reachedValueAt=-1; // Not char!
+    for(short /*Not char!*/ i=19;i>=0;i--) // Amount of decimals in highest possible unsigned long - 1 (highest position will never be >9) (20-1).
     {
-        uint64_t t=temp[(uint8_t)i];
+        uint64_t t=temp[i];
         if(reachedValueAt==-1)
         {
             if(t==0)

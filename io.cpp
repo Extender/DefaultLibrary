@@ -531,7 +531,7 @@ void io::terminateBuffer(char *&buffer, fs_t &pos, fs_t bufferSize)
     buffer[pos]=0; // Do not use pos++! Many functions use the parameter passed in "pos" as a string length indicator!
 }
 
-void *io::fixedLengthDataToString(char *data, fs_t length)
+char *io::fixedLengthDataToString(char *data, fs_t length)
 {
     char *out=(char*)malloc(length+1);
     out[length]=0;
