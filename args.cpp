@@ -59,7 +59,7 @@ std::map<std::string, std::string> args::getValues(int argc, char *argv[], bool 
             dashCount++;
         }
         std::string name=std::string(c+dashCount,n-dashCount);
-        std::string value=l==n-1?std::string():std::string(c+n+1,l-n);
+        std::string value=(l==n+1?std::string():std::string(c+n+1,l-n-1));
         out.insert(std::pair<std::string,std::string>(name,value));
     }
     return out;
@@ -129,7 +129,7 @@ std::string args::getValue(int argc, char *argv[], const char *flag, bool skipFi
         std::string name=std::string(c+dashCount,n-dashCount);
         if(text::iCompare(name,flagStr))
         {
-            std::string value=l==n-1?std::string():std::string(c+n+1,l-n);
+            std::string value=(l==n+1?std::string():std::string(c+n+1,l-n-1));
             free(c);
             return value;
         }
