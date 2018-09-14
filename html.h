@@ -7,6 +7,8 @@
 #include "text.h"
 #include "io.h"
 
+#include <QDebug>
+
 #define node_invalidId UINT32_MAX
 #define node_invalidIndex node_invalidId
 
@@ -66,8 +68,9 @@ namespace html
         Node(node_id_t _id,const char *_name);
         Node(node_id_t _id,node_type_t _type,const char *_name);
         Node(node_id_t _id,const char *_name,const char *_value);
-        Node(node_id_t _id,node_type_t _type,const char *_value);
         Node(node_id_t _id,node_type_t _type,const char *_name,const char *_value);
+
+        static const char *nodeTypeToString(node_type_t type);
     };
 
     class NodeCollection
