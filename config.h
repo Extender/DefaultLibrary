@@ -74,15 +74,15 @@ public:
     static config_pair_t makeKeyValuePair(const char *key,char *value);
 
     static std::vector<config_key_t> *getKeys(char *source);
-    static std::vector<config_key_t> *getKeys(char *source,char *startingWith);
+    static std::vector<config_key_t> *getKeys(char *source, const char *startingWith);
     static std::vector<config_pair_t> *getValues(char *source);
-    static std::vector<config_pair_t> *getValues(char *source, char *startingWith);
-    static config_value_t getValue(char *source, config_key_t key);
-    static config_value_t getValue(std::vector<config_pair_t> *values, config_key_t key);
-    static void setValue(std::vector<config_pair_t> *values,config_key_t key,config_value_t value);
-    static bool hasKey(char *source,config_key_t key);
-    static bool hasKey(std::vector<config_pair_t> *values,config_key_t key);
-    static bool removeKey(std::vector<config_pair_t> *values,config_key_t key);
+    static std::vector<config_pair_t> *getValues(char *source, const char *startingWith);
+    static config_value_t getValue(char *source, const config_key_t key);
+    static config_value_t getValue(std::vector<config_pair_t> *values, const config_key_t key);
+    static void setValue(std::vector<config_pair_t> *values,const config_key_t key,config_value_t value);
+    static bool hasKey(char *source,const config_key_t key);
+    static bool hasKey(std::vector<config_pair_t> *values,const config_key_t key);
+    static bool removeKey(std::vector<config_pair_t> *values,const config_key_t key);
     static char *serializeConfig(std::vector<config_pair_t> *values,fs_t &length);
     static void freeValueArray(std::vector<config_pair_t> *values);
 };
