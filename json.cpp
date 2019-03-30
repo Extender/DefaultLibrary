@@ -638,7 +638,7 @@ json::Value **json::parser::parse(const char *source, uint32_t &size, uint32_t &
     else if(thisType==JSON_VALUE_TYPE_DOUBLE)\
         v=new Value(thisAttrName,JSON_VALUE_TYPE_DOUBLE,ValueManager::fromDouble(atof(attrValue)));\
     else if(thisType==JSON_VALUE_TYPE_BOOL)\
-        v=new Value(thisAttrName,JSON_VALUE_TYPE_BOOL,ValueManager::fromBool(text::iCompare(attrValue,"true")==0));\
+        v=new Value(thisAttrName,JSON_VALUE_TYPE_BOOL,ValueManager::fromBool(text::iCompare(attrValue,"true")));\
     else if(thisType==JSON_VALUE_TYPE_ARRAY)\
     {\
         v=new Value(thisAttrName,JSON_VALUE_TYPE_ARRAY,ValueManager::fromArray(subarray,subarraySize));\
